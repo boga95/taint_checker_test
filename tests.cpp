@@ -18,6 +18,11 @@ int Buffer[BUFSIZE];
 
 /*
  * Test sources
+ * Assumptions:
+ *  - checkers give warning for out of boung memory access
+ *  - checkers give warning for tainted format string
+ *  - fscanf propagate taintedness
+ *  - read propagate taintedness
  */
 
 // C
@@ -48,18 +53,9 @@ void testSourcesFscanf() {
 #define AF_LOCAL  AF_UNIX   /* backward compatibility */
 #define SOCK_STREAM 1
 
-void testSourcesSocket1() {
+void testSourcesSocket() {
     char buffer[BUFSIZE];
     int sock = socket(AF_INET, SOCK_STREAM, 0);
-    // Assume read propagate taintedness
-    read(sock, buffer, BUFSIZE);
-    syslog(LOG_WARNING, buffer); // Expect: Untrusted data is passed to a system call
-}
-
-void testSourcesSocket2() {
-    char buffer[BUFSIZE];
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    // Assume read propagate taintedness
     read(sock, buffer, BUFSIZE);
     sprintf(buffer, ""); // Expect: Uncontrolled format string
 }
@@ -92,6 +88,10 @@ void testSourcesStdgetline() {
 
 /*
  * Test propagation
+ * Assumptions:
+ *  - scanf give tainted value
+ *  - checkers give warning for out of boung memory access
+ *  - checkers give warning for tainted format string
  */
 
 // Propagation through functions
@@ -191,4 +191,18 @@ void testPropagationConditional() {
     scanf("%d", &x);
     int y = x == 4 ? 1 : 2;
     Buffer[y] = 1; // Expect: no warning
+}
+
+/*
+ * Test sinks
+ * Assumptions:
+ *  - socket give tainted value
+ *  - read propagate taintedness
+ */
+
+void testSinksSyslog() {
+    char buffer[BUFSIZE];
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    read(sock, buffer, BUFSIZE);
+    syslog(LOG_WARNING, buffer); // Expect: Untrusted data is passed to a system call
 }
