@@ -124,8 +124,71 @@ void testPropagationMemcpy() {
 
 void testPropagationAtoi() {
     char str[BUFSIZE];
-    scanf("%s", str1;
-    int x = atoi(str)
+    scanf("%s", str1);
+    int x = atoi(str);
     Buffer[x] = 1; // Expect: Out of bound memory access
 }
 
+// Propagation through expressions
+void testPropagationAssignment1() {
+    int x;
+    scanf("%d", &x);
+    int y = 1;
+    int z = x = y;
+    Buffer[z] = 1; // Expect: no warning
+}
+
+void testPropagationAssignment2() {
+    int x;
+    scanf("%d", &x);
+    int z = x;
+    Buffer[z] = 1; // Expect: Out of bound memory access
+}
+
+void testPropagationArithmetic1() {
+    int x;
+    scanf("%d", &x);
+    int y = x % BUFSIZE;
+    Buffer[y] = 1; // Expect: no warning
+}
+
+void testPropagationArithmetic2() {
+    int x;
+    scanf("%d", &x);
+    int y = ((x + 3 - 1) / 5) * 6;
+    Buffer[y] = 1; // Expect: Out of bound memory access
+}
+
+void testPropagationCompoundAssignment1() {
+    int x;
+    scanf("%d", &x);
+    x %= BUFSIZE;
+    Buffer[x] = 1; // Expect: no warning
+}
+
+void testPropagationCompoundAssignment2() {
+    int x;
+    scanf("%d", &x);
+    x += 2;
+    x -= 2;
+    x *= 2;
+    x /= 2;
+    Buffer[x] = 1; // Expect: Out of bound memory access
+}
+
+void testPropagationIncrement() {
+    int x;
+    scanf("%d", &x);
+    ++x;
+    x++;
+    --x;
+    x--;
+    Buffer[x] = 1; // Expect: Out of bound memory access
+}
+
+void testPropagationConditional() {
+    int x;
+    scanf("%d", &x);
+    int y = x == 4 ? 1 : 2;
+    Buffer[y] = 1; // Expect: no warning
+}
