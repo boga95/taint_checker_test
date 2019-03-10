@@ -124,7 +124,7 @@ void testPropagationMemcpy() {
 
 void testPropagationAtoi() {
     char str[BUFSIZE];
-    scanf("%s", str1);
+    scanf("%s", str);
     int x = atoi(str);
     Buffer[x] = 1; // Expect: Out of bound memory access
 }
@@ -196,13 +196,56 @@ void testPropagationConditional() {
 /*
  * Test sinks
  * Assumptions:
- *  - socket give tainted value
- *  - read propagate taintedness
+ *  - scanf give tainted value
  */
 
 void testSinksSyslog() {
-    char buffer[BUFSIZE];
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    read(sock, buffer, BUFSIZE);
-    syslog(LOG_WARNING, buffer); // Expect: Untrusted data is passed to a system call
+    char str[BUFSIZE];
+    scanf("%s", str);
+    syslog(LOG_WARNING, str); // Expect: Untrusted data is passed to a system call
+}
+
+void testSinksSystem() {
+    char str[BUFSIZE];
+    scanf("%s", str);
+    system(LOG_WARNING, str); // Expect: Untrusted data is passed to a system call
+}
+
+void testSinksBufferOverflow() {
+    int x;
+    scanf("%d", &x);
+    Buffer[x] = 1; // Expect: Out of bound memory access
+}
+
+void testSinksDivzero1() {
+    int x;
+    scanf("%d", &x);
+    if (x != 0)
+        int y = 1 / x; // Expect: no warning
+}
+
+void testSinksDivzero2() {
+    int x;
+    scanf("%d", &x);
+    int y = 1 / x; // Expect: Division by a tainted value, possibly zero
+}
+
+void testSinksDivzero3() {
+    int x;
+    scanf("%d", &x);
+    int y = 1 % x; // Expect: Division by a tainted value, possibly zero
+}
+
+void testSinksTaintedBufferSize1() {
+    int x;
+    scanf("%d", &x);
+    char buf1[BUFSIZE];
+    char buf2[BUFSIZE];
+    memcpy(buf1, buf2, x) // Expect: Untrusted data is used to specify the buffer size
+}
+
+void testSinksTaintedBufferSize2() {
+    int x;
+    scanf("%d", &x);
+    malloc(x) // Expect: Untrusted data is used to specify the buffer size
 }
