@@ -249,3 +249,41 @@ void testSinksTaintedBufferSize2() {
     scanf("%d", &x);
     malloc(x) // Expect: Untrusted data is used to specify the buffer size
 }
+
+/*
+ * Test interprocedural checking
+ * Assumptions:
+ *  - scanf give tainted value
+ */
+
+void sinkFunc(int x) {
+  Buffer[x] = 1;
+}
+
+void testInterprocedural() {
+    int x;
+    scanf("%d", &x);
+    sinkFunc(x); // Expect: Out of bound memory access
+}
+
+/*
+ * Test global variable taintedness
+ * Assumptions:
+ *  - fopen give tainted file descriptor
+ *  - read propagate taintedness
+ */
+
+int global;
+int getGlobal() {
+  return global;
+}
+
+void taintGlobal(int fd) {
+  read(fd, &global, sizeof(global));
+}
+
+void testGlobal() {
+    int fd = fopen("example.txt", "r");
+    taintGlobal(fd);
+    Buffer[getGlobal()] = 1; // Expect: Out of bound memory access
+}
