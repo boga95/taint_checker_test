@@ -6,9 +6,13 @@ A collection of tests for my thesis to compare different taint checkers:
     - Infer
 */
 
+#include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
+#include <syslog.h>
+#include <unistd.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -34,9 +38,8 @@ void testSourcesScanf() {
 
 void testSourcesFscanf() {
     FILE *fptr = fopen("example.txt", "r");
-    int num;
-    // Assume fscanf propagate taintedness
-    fscanf(fptr, "%d", &num);
+    int x;
+    fscanf(fptr, "%d", &x);
     Buffer[x] = 1; // Expect: Out of bound memory access
 }
 
@@ -80,9 +83,10 @@ void testSourcesStdgetline() {
     std::string str;
     std::ifstream myfile;
     myfile.open("example.txt");
-    str::getline(myfile, str);
+    std::getline(myfile, str);
     myfile.close();
-    sprintf(str.c_str(), ""); // Expect: Uncontrolled format string
+    char buf[BUFSIZE];
+    sprintf(buf, str.c_str(), ""); // Expect: Uncontrolled format string
 }
 
 
@@ -208,7 +212,7 @@ void testSinksSyslog() {
 void testSinksSystem() {
     char str[BUFSIZE];
     scanf("%s", str);
-    system(LOG_WARNING, str); // Expect: Untrusted data is passed to a system call
+    system(str); // Expect: Untrusted data is passed to a system call
 }
 
 void testSinksBufferOverflow() {
@@ -241,13 +245,13 @@ void testSinksTaintedBufferSize1() {
     scanf("%d", &x);
     char buf1[BUFSIZE];
     char buf2[BUFSIZE];
-    memcpy(buf1, buf2, x) // Expect: Untrusted data is used to specify the buffer size
+    memcpy(buf1, buf2, x); // Expect: Untrusted data is used to specify the buffer size
 }
 
 void testSinksTaintedBufferSize2() {
     int x;
     scanf("%d", &x);
-    malloc(x) // Expect: Untrusted data is used to specify the buffer size
+    malloc(x); // Expect: Untrusted data is used to specify the buffer size
 }
 
 /*
@@ -283,7 +287,12 @@ void taintGlobal(int fd) {
 }
 
 void testGlobal() {
-    int fd = fopen("example.txt", "r");
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
     taintGlobal(fd);
     Buffer[getGlobal()] = 1; // Expect: Out of bound memory access
 }
+
+/*
+ * Test configuration
+ * Assumptions:
+ */
