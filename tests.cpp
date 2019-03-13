@@ -268,7 +268,7 @@ void testInterprocedural() {
 /*
  * Test global variable taintedness
  * Assumptions:
- *  - fopen give tainted file descriptor
+ *  - socket give tainted file descriptor
  *  - read propagate taintedness
  */
 
@@ -285,6 +285,22 @@ void testGlobal() {
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     taintGlobal(fd);
     Buffer[getGlobal()] = 1; // Expect: Out of bound memory access
+}
+
+/*
+ * Test namespaces
+ * Assumptions:
+ *  - checkers give warning for out of boung memory access
+ */
+
+namespace myNamespace {
+    void scanf(const char*, int&);
+}
+
+void testNamespace() {
+    int x;
+    myNamespace::scanf("%d", &x);
+    Buffer[x] = 1; // Expect: no warning
 }
 
 /*
