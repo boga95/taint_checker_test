@@ -51,11 +51,6 @@ void testSourcesFscanf() {
 //     Buffer[x] = 1; // Expect: Out of bound memory access
 // }
 
-#define AF_UNIX   1   /* local to host (pipes) */
-#define AF_INET   2   /* internetwork: UDP, TCP, etc. */
-#define AF_LOCAL  AF_UNIX   /* backward compatibility */
-#define SOCK_STREAM 1
-
 void testSourcesSocket() {
     char buffer[BUFSIZE];
     int sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -296,3 +291,5 @@ void testGlobal() {
  * Test configuration
  * Assumptions:
  */
+
+int main() {}
