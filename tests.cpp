@@ -289,7 +289,7 @@ void testGlobal() {
 }
 
 /*
- * Test namespaces
+ * Test namespaces, scopes
  * Assumptions:
  *  - checkers give warning for out of boung memory access
  */
@@ -304,9 +304,48 @@ void testNamespace() {
     Buffer[x] = 1; // Expect: no warning
 }
 
+struct Foo {
+    void scanf(const char*, int*);
+    void myScanf(const char*, int*);
+};
+
+void testMemberFunction() {
+    int x;
+    Foo foo;
+    foo.scanf("%d", &x);
+    Buffer[x] = 1; // Expect: no warning
+}
+
 /*
  * Test configuration
  * Assumptions:
  */
+
+int mySource();
+int myPropagator(int, int*);
+void mySink(int, int);
+void myFilter(int*);
+
+void testConfiguration() {
+    int x = mySource();
+    int y;
+    myPropagator(x, &y);
+    mySink(1, y); // Expect: Untrusted data passed to sink
+}
+
+void testConfigurationFilter() {
+    int x = mySource();
+    int y;
+    myPropagator(x, &y);
+    myFilter(&y);
+    mySink(1, y); // Expect: no warning
+}
+
+void testConfigurationMemberFunc() {
+    int y;
+    Foo foo;
+    foo.myScanf("%d", &y);
+    mySink(1, y); // Expect: Untrusted data passed to sink
+}
 
 int main() {}

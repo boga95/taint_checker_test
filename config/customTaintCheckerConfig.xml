@@ -1,0 +1,46 @@
+<TaintChecker>
+    <TaintSources>
+        <TaintSource>
+            <method>mySource</method>
+            <params>
+                <value>100</value>
+            </params>
+        </TaintSource>
+        <TaintSource>
+            <method>myScanf</method>
+            <params>
+                <value>1</value>
+            </params>
+        </TaintSource>
+    </TaintSources>
+
+    <PropagationRules>
+        <PropagationRule>
+            <method>myPropagator</method>
+            <sources>
+                <value>0</value>
+            </sources>
+            <destinations>
+                <value>1</value>
+            </destinations>
+        </PropagationRule>
+    </PropagationRules>
+
+    <TaintDestinations>
+        <TaintDestination>
+            <method>mySink</method>
+            <params>
+                <value>1</value>
+            </params>
+        </TaintDestination>
+    </TaintDestinations>
+
+    <TaintFilters>
+        <TaintFilter>
+            <method>myFilter</method>
+            <params>
+                <value>0</value>
+            </params>
+        </TaintFilter>
+    </TaintFilters>
+</TaintChecker>
