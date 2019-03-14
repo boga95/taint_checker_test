@@ -55,7 +55,8 @@ void testSourcesSocket() {
     char buffer[BUFSIZE];
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     read(sock, buffer, BUFSIZE);
-    sprintf(buffer, ""); // Expect: Uncontrolled format string
+    char result[BUFSIZE];
+    sprintf(result, buffer); // Expect: Uncontrolled format string
 }
 
 // C++
@@ -98,7 +99,7 @@ void testPropagationStrcpy() {
     char str1[BUFSIZE];
     char str2[BUFSIZE];
     scanf("%s", str1);
-    strcpy(str1, str2);
+    strcpy(str2, str1);
     char result[BUFSIZE];
     sprintf(result, str2, ""); // Expect: Uncontrolled format string
 }
@@ -201,7 +202,7 @@ void testPropagationConditional() {
 void testSinksSyslog() {
     char str[BUFSIZE];
     scanf("%s", str);
-    syslog(LOG_WARNING, str); // Expect: Untrusted data is passed to a system call
+    syslog(LOG_WARNING, str); // Expect: Uncontrolled format string
 }
 
 void testSinksSystem() {
@@ -256,13 +257,13 @@ void testSinksTaintedBufferSize2() {
  */
 
 void sinkFunc(int x) {
-  Buffer[x] = 1;
+  Buffer[x] = 1; // Expect: Out of bound memory access
 }
 
 void testInterprocedural() {
     int x;
     scanf("%d", &x);
-    sinkFunc(x); // Expect: Out of bound memory access
+    sinkFunc(x);
 }
 
 /*
@@ -294,7 +295,7 @@ void testGlobal() {
  */
 
 namespace myNamespace {
-    void scanf(const char*, int&);
+    void scanf(const char*, int*);
 }
 
 void testNamespace() {
